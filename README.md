@@ -1,9 +1,13 @@
 # codin_games
 
-The Git was created to be able to keep track of the changes to be made over time.
+The code is located in the src folder.
 
-The code uploaded will only work when ran on the codin games platform on the site:
-
+The code can be tested on the codin games platform. 
+"Main.java"
 https://www.codingame.com/ide/puzzle/mars-lander-episode-2
+"Mars_I.java"
+https://www.codingame.com/ide/puzzle/mars-lander-episode-1
+
+
 
 
