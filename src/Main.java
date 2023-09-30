@@ -1,5 +1,5 @@
 import java.util.*;
-import java.lang.Math.*;
+
 /**
  * Auto-generated code below aims at helping you parse
  * the standard input according to the problem statement.
@@ -19,40 +19,23 @@ import java.lang.Math.*;
 class Player {
     private static int landingZoneLeft = 0;
     private static int landingZoneRight = 0;
-    private static int decelerate = 45;
-
     private static final int APPROACH = 0, LANDING = 1, COUNTER_BURN = 2;
-    private static final int MIN_APPROACH_ALTITUDE = 300, MIN_DISTANCE_IN_LANDINGZONE = 500, COUNTER_BURN = 2;
-
+    private static final int MIN_APPROACH_ALTITUDE = 2000;
     private static int highestPeak = 0;
     private static int locationHighestPeak = 0;
-
-    private static int landingZoneAltitude;
-
-    private static boolean inApproachParameters() {
-        return true;
-    }
-
-
-    // todo check for the highest peak
-    // todo check for  the height of the landing
-    // todo  hover logic
-    // todo
-
+    private static int landingZoneAltitude = 0;
 
     public static void main(String args[]) {
+
         Scanner in = new Scanner(System.in);
 
         int surfaceN = in.nextInt(); // the number of points used to draw the surface of Mars.
         int landXn = 0;
         int landYn = 0;
-        int direction = 0;
-        int thrust = 4;
 
         for (int i = 0; i < surfaceN; i++) {
             int landX = in.nextInt(); // X coordinate of a surface point. (0 to 6999)
             int landY = in.nextInt(); // Y coordinate of a surface point. By linking all the points together in a sequential fashion, you form the surface of Mars.
-
             if (landYn - landY == 0 && i != 0) {
                 landingZoneLeft = landXn;
                 landingZoneRight = landX;
@@ -60,14 +43,11 @@ class Player {
                 System.err.println(landingZoneLeft);
                 System.err.println(landingZoneRight);
             }
-
             if (landY > landYn) {
                 highestPeak = landY;
                 locationHighestPeak = landX;
-                System.err.println(highestPeak);
-                System.err.println(locationHighestPeak);
+                System.err.println("Highest Peak" + highestPeak);
             }
-
             landXn = landX;
             landYn = landY;
         }
@@ -85,147 +65,112 @@ class Player {
             int rotate = in.nextInt();  // the rotation angle in degrees (-90 to 90).
             int power = in.nextInt();   // the thrust power (0 to 4).
 
-            // Write an action using System.out.println()
-            // To debug: System.err.println("Debug messages...");
-
-            int horSpeed = Math.abs(hSpeed); // they were using negative speed, might come in handy.
-
-            determineDirection(hSpeed); // Do not know where we might need this (
-
             switch (evaluateFlightStage(X, Y, fuel, vSpeed, hSpeed)) {
 
                 case (APPROACH):
-
-                    System.out.println(adjustApproachRotation(X, vSpeed) + " " + adjustApproachThrust(vSpeed));
+                    System.err.println("Approach stage");
+                    System.err.println(adjustApproachRotation(X, vSpeed, hSpeed));   // to be removed from prod.
+                    System.err.println(adjustApproachThrust(vSpeed, Y, X));          // to be removed from prod.
+                    System.out.println(adjustApproachRotation(X, vSpeed, hSpeed) + " " + adjustApproachThrust(vSpeed, Y, X));
                     break;
                 case (COUNTER_BURN):
-
-
+                    System.err.println("counter stage");
+                    System.out.println(counterRotation(Y, hSpeed, X) + " " + adjustApproachThrust(vSpeed, Y, X));   //
+                    // rename Y
                     break;
                 case (LANDING):
-                    System.out.println(0 + " " + adjustThrust(vSpeed));
+                    System.err.println("Landing stage");
+                    System.err.println(adjustLandingThrust(vSpeed));
+                    System.out.println(0 + " " + adjustLandingThrust(vSpeed));
                     break;
                 default:
                     break;
-
-
             }
-
         }
-//
-//            if (X < landingZoneRight && X > landingZoneLeft) { // main  control module
-//                System.err.println(" in landing mode ");
-//
-//                if (horSpeed > 7) {
-//                    System.err.println(" else in while loop" + direction);
-//                    int newDirection = -1 * decelerate;
-//                    decelerate = newDirection;
-//                    System.out.println(newDirection + " " + adjustThrust(vSpeed));   // updates the horSpeed
-//                }
-//
-//                if (horSpeed <= 7) {
-//                    direction = 0;
-//                    System.err.println(" landing horSpeed " + horSpeed);
-//                    System.out.println(direction + " " + adjustThrust(vSpeed));
-////                }
-//
-//        } else if (X > landingZoneRight) {
-//
-//            if (horSpeed <= 20) {
-//                direction = 45;
-//                System.out.println(direction + " " + adjustThrust(vSpeed));
-//                System.err.println("right approaching lz " + direction);
-//            } else {
-//                int decelerate = 0;
-//                System.out.println(decelerate + " " + adjustThrust(vSpeed));
-//                System.err.println("deceleration  " + direction);
-//            }
-//
-//        } else if (X < landingZoneLeft) { // if the speed has been reached and the distance i
-//
-//            if (horSpeed <= 20) {
-//                direction = -45;
-//                System.err.println("left approaching lz " + adjustThrust(vSpeed));
-//                System.out.println(direction + " " + adjustThrust(vSpeed));
-//
-//            } else {
-//                int decelerate = 0;
-//                System.err.println("left correcting " + direction);
-//                System.out.println(decelerate + " " + adjustThrust(vSpeed));
-//            }
-//        }
-//    }
-//
-
     }
 
-    private static int adjustApproachRotation(int X,int vSpeed ) {
-        if (X > landingZoneRight) {
+    private static int counterRotation(int Y, int hSpeed, int X) {
 
-            if (Math.abs(vSpeed) <= 20) {
-               return 45;
-            } else {
-              return 0;
-            }
-        } else if (X < landingZoneLeft) {
-            if (Math.abs(vSpeed) <= 20) {
-              return -45;
-            } else {
+        int directionOfMovement = determineDirection(hSpeed);
+
+        if (Y > determineAltitudeToReachLandingZone(X)) {
+            return -35 * directionOfMovement;
+        } else if (Y < determineAltitudeToReachLandingZone(X)) {
+            return -19 * directionOfMovement;
+        } else if (Math.abs(hSpeed) < 7) {
             return 0;
-            }
         }
-
-
         return 0;
     }
 
-    private static Object adjustApproachThrust(int vSpeed) {
-        return 4;
-    }
+    private static int adjustApproachRotation(int X, int vSpeed, int hSpeed) {
 
 
-    private static void determineDirection(int hSpeed) {
-        if (hSpeed > 0) {
-            System.err.println("moving right");
-        } else {
-            System.err.println("moving left");
+        if (X > landingZoneRight) {
+            if (Math.abs(vSpeed) <= 39 && Math.abs(hSpeed) < 20) {
+                return 19;
+            }
+        } else if (X < landingZoneLeft) {
+            if (Math.abs(vSpeed) <= 39 && Math.abs(hSpeed) < 20) {
+                return -19;
+            }
         }
+        return 0;
     }
 
-    private static int adjustThrust(int vSpeed) {
-        if (vSpeed > 39) {
+    private static Object adjustApproachThrust(int vSpeed, int shipAltitude, int X) {
+        if (Math.abs(vSpeed) > 39 || shipAltitude < determineAltitudeToReachLandingZone(X)) {
             return 4;
         }
         return 3;
     }
 
-    private static int evaluateFlightStage(int shipPositionX, int shipAltitudeY, int fuel, int vSpeed, int hSpeed) {
+    private static int determineDirection(int hSpeed) {
+        if (hSpeed > 0) {
+            return -1;
+        } else {
+            return 1;
+        }
+    }
 
+    private static int adjustLandingThrust(int vSpeed) {
+        if (Math.abs(vSpeed) > 38) {
+            return 4;
+        } else return 3;
+    }
+
+    private static int evaluateFlightStage(int shipPositionX, int shipAltitudeY, int fuel, int vSpeed, int hSpeed) {
+        System.err.println("Evaluate Flight Stage");
+        System.err.println("vSpeed: " + vSpeed);
+        System.err.println("hSpeed: " + hSpeed);
+        System.err.println(safeToLand(vSpeed, hSpeed));
         if (shipPositionX < landingZoneRight && shipPositionX > landingZoneLeft && safeToLand(vSpeed, hSpeed)) { // main
             return LANDING;
-        } else if (shipPositionX < landingZoneLeft || shipPositionX > landingZoneRight && safeApproach(vSpeed,
-                shipAltitudeY, shipPositionX, fuel)) {
+        } else if (shipPositionX < landingZoneLeft && Math.abs(hSpeed) < 20
+                || shipPositionX > landingZoneRight && Math.abs(hSpeed) < 20) {
             return APPROACH;
         }
         return COUNTER_BURN;
     }
 
-    private static boolean safeApproach(int vSpeed, int shipAltitudeY, int shipPositionX, int fuel) {
-        int requiredMinimumVerticalSpeed = determineMinimumVerticalSpeed(shipPositionX, fuel);
-        int requiredAltitudeToReachLandingZone = determineAltitudeToReachLandingZone();
-        return (vSpeed >= requiredMinimumVerticalSpeed) && (shipAltitudeY >= requiredAltitudeToReachLandingZone);
+    private static boolean safeApproach(int vSpeed, int shipAltitudeY, int shipPositionX, int hSpeed) {
+
+        int requiredAltitudeToReachLandingZone = determineAltitudeToReachLandingZone(shipPositionX);
+
+        return (Math.abs(vSpeed) < 40 && shipAltitudeY >= requiredAltitudeToReachLandingZone && Math.abs(hSpeed) < 20);
     }
 
-    private static int determineMinimumVerticalSpeed(int shipPositionX, int fuel) {
-        int flightTimeWithMaximumTrust = fuel / 4;
-        return (landingZoneLeft + ((landingZoneRight - landingZoneLeft) / 2) - shipPositionX) / flightTimeWithMaximumTrust;
-    }
+    private static int determineAltitudeToReachLandingZone(int shipPositionX) {
 
-    private static int determineAltitudeToReachLandingZone() {
-        return highestPeak + MIN_APPROACH_ALTITUDE;
+        if (locationHighestPeak > landingZoneRight && shipPositionX > locationHighestPeak) {
+            return highestPeak + MIN_APPROACH_ALTITUDE;
+        } else if (locationHighestPeak < landingZoneLeft && shipPositionX < locationHighestPeak) {
+            return highestPeak + MIN_APPROACH_ALTITUDE;
+        }
+        return MIN_APPROACH_ALTITUDE + landingZoneAltitude;
     }
 
     private static boolean safeToLand(int vSpeed, int hSpeed) {
-        return Math.abs(vSpeed) < 39 && Math.abs(hSpeed) < 7;
+        return Math.abs(vSpeed) < 40 && Math.abs(hSpeed) < 7;
     }
 }
